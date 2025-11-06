@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://akasa-food-order-assignment.onrender.com'
 
 export const apiCall = async (endpoint: string, method: string = 'GET', body?: any, token?: string) => {
   const headers: any = { 'Content-Type': 'application/json' }
