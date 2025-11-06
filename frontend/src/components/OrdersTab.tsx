@@ -46,11 +46,11 @@ export default function OrdersTab({ token }: OrdersTabProps) {
         <p className="no-orders">No orders yet</p>
       ) : (
         <div className="orders-list">
-          {orderList.map((order, index) => (
+          {orderList.map((order) => (
             <div key={order._id} className="order-card">
               <div className="order-header">
                 <div className="order-id">
-                  <strong>Order #</strong> {(index + 1).toString().padStart(4, '0')}
+                  <strong>Order #</strong> {order.orderId.slice(-6).toUpperCase()}
                 </div>
                 <div className={`order-status ${order.status}`}>
                   {order.status === 'delivered' ? '✅ Delivered' : '⏳ Pending'}
