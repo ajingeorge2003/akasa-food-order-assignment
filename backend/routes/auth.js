@@ -18,6 +18,14 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD
+  },
+  connectionTimeout: 10000, // 10 seconds
+  socketTimeout: 10000, // 10 seconds
+  pool: {
+    maxConnections: 5,
+    maxMessages: 100,
+    rateDelta: 4000,
+    rateLimit: 14
   }
 });
 
@@ -110,10 +118,15 @@ router.post(
     };
 
     try {
-      await transporter.sendMail(mailOptions);
+      const emailPromise = transporter.sendMail(mailOptions);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Email send timeout")), 8000)
+      );
+      
+      await Promise.race([emailPromise, timeoutPromise]);
       res.json({ message: "Password reset link sent to your email" });
     } catch (err) {
-      console.error("Email sending failed:", err);
+      console.error("Email sending failed:", err.message);
       res.status(500);
       throw new Error("Failed to send reset email");
     }

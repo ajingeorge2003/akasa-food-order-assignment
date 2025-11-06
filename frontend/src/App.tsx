@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import LandingPage from './components/LandingPage.tsx'
 import AuthTab from './components/AuthTab.tsx'
+import ResetPasswordPage from './components/ResetPasswordPage.tsx'
 import ProductsTab from './components/ProductsTab.tsx'
 import CartTab from './components/CartTab.tsx'
 import OrdersTab from './components/OrdersTab.tsx'
@@ -16,6 +17,16 @@ function App() {
     const saved = localStorage.getItem('isDarkMode')
     return saved ? JSON.parse(saved) : false
   })
+  const [resetToken, setResetToken] = useState<string | null>(null)
+
+  // Check for reset token in URL
+  useEffect(() => {
+    const path = window.location.pathname
+    const match = path.match(/\/reset-password\/(.+)/)
+    if (match && match[1]) {
+      setResetToken(match[1])
+    }
+  }, [])
 
   useEffect(() => {
     if (token) {
@@ -58,6 +69,24 @@ function App() {
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode)
+  }
+
+  // Show reset password page if reset token is present
+  if (resetToken) {
+    return (
+      <ResetPasswordPage 
+        token={resetToken} 
+        onResetSuccess={() => {
+          setResetToken(null)
+          setToken(localStorage.getItem('token'))
+          setShowLanding(true)
+        }}
+        onBackToLogin={() => {
+          setResetToken(null)
+          window.history.pushState({}, '', '/')
+        }}
+      />
+    )
   }
 
   if (showLanding && !token) {
