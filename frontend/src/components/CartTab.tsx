@@ -102,6 +102,7 @@ export default function CartTab({ token, onCheckoutSuccess, onCartUpdate }: Cart
   const [successMsg, setSuccessMsg] = useState('')
   const [checkingOut, setCheckingOut] = useState(false)
   const [orderResult, setOrderResult] = useState<any>(null)
+  const [insufficientItems, setInsufficientItems] = useState<any[]>([])
 
   useEffect(() => {
     fetchCart()
@@ -159,6 +160,7 @@ export default function CartTab({ token, onCheckoutSuccess, onCartUpdate }: Cart
     }
     setCheckingOut(true)
     setError('')
+    setInsufficientItems([])
     try {
       const result = await orders.checkout(token)
       setOrderResult(result.order)
@@ -167,6 +169,10 @@ export default function CartTab({ token, onCheckoutSuccess, onCartUpdate }: Cart
       setSuccessMsg('Order placed successfully!')
       setTimeout(() => onCheckoutSuccess(), 2000)
     } catch (err: any) {
+      // Check if error has insufficient items data
+      if (err.data?.insufficient) {
+        setInsufficientItems(err.data.insufficient)
+      }
       setError(err.message)
     } finally {
       setCheckingOut(false)
@@ -191,7 +197,24 @@ export default function CartTab({ token, onCheckoutSuccess, onCartUpdate }: Cart
 
   return (
     <div className="cart-container">
-      {error && <div className="error">{error}</div>}
+      {error && (
+        <div className="error-section">
+          <div className="error">{error}</div>
+          {insufficientItems.length > 0 && (
+            <div className="insufficient-items-alert">
+              <h4>❌ Items with Insufficient Stock:</h4>
+              <ul>
+                {insufficientItems.map((item: any) => (
+                  <li key={item.product}>
+                    <strong>{item.name}</strong>: Requested {item.requested}, but only {item.available} available
+                  </li>
+                ))}
+              </ul>
+              <p className="alert-info">Please reduce the quantity of these items and try again.</p>
+            </div>
+          )}
+        </div>
+      )}
       {successMsg && <div className="success">{successMsg}</div>}
 
       {loading ? (

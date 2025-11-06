@@ -1,0 +1,345 @@
+/* ===== CONSISTENT TOP BAR STYLING ===== */
+
+.topbar {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+  backdrop-filter: blur(10px);
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  gap: 1rem;
+  min-height: 60px;
+  flex-wrap: nowrap;
+}
+
+/* Left Section - Logo */
+.topbar-left {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  min-width: auto;
+}
+
+.topbar-logo {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.topbar-logo:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.02);
+}
+
+.topbar-logo:active {
+  transform: scale(0.98);
+}
+
+/* Center Section - Tagline */
+.topbar-center {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+}
+
+.app-tagline {
+  font-size: 0.95rem;
+  font-weight: 500;
+  opacity: 0.95;
+  margin: 0;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Right Section - Controls */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 0 0 auto;
+  justify-content: flex-end;
+}
+
+/* Dark Mode Toggle */
+.dark-mode-toggle {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0;
+}
+
+.dark-mode-toggle:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: rotate(20deg);
+}
+
+.dark-mode-toggle:active {
+  transform: scale(0.95);
+}
+
+/* User Menu */
+.user-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.user-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 0.7rem 1.3rem;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.user-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.user-btn:active {
+  transform: scale(0.95);
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  min-width: 180px;
+  z-index: 1000;
+  animation: slideDown 0.3s ease-out;
+  max-width: 90vw;
+  margin-top: 0.5rem;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-menu .logout-btn {
+  width: 100%;
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.9rem 1.2rem;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dropdown-menu .logout-btn:hover {
+  background: #c82333;
+}
+
+.dropdown-menu .logout-btn:active {
+  background: #bd2130;
+  transform: scale(0.98);
+}
+
+/* Dark Mode Styling */
+.topbar.dark-mode {
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(22, 33, 62, 0.95) 100%);
+  color: #e0e0e0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.topbar.dark-mode .topbar-logo {
+  color: #e0e0e0;
+}
+
+.topbar.dark-mode .topbar-logo:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.topbar.dark-mode .app-tagline {
+  color: #b0b0b0;
+}
+
+.topbar.dark-mode .dropdown-menu {
+  background: #2a2a3e;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.topbar.dark-mode .user-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #e0e0e0;
+}
+
+.topbar.dark-mode .user-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablet (768px - 1023px) */
+@media (max-width: 768px) {
+  .topbar {
+    padding: 0.9rem 1.2rem;
+    min-height: 56px;
+    gap: 0.8rem;
+  }
+
+  .topbar-logo {
+    font-size: 1.5rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .app-tagline {
+    font-size: 0.85rem;
+  }
+
+  .dark-mode-toggle {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    font-size: 1rem;
+  }
+
+  .user-btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    min-height: 40px;
+  }
+
+  .dropdown-menu {
+    max-width: 280px;
+  }
+}
+
+/* Mobile (≤480px) */
+@media (max-width: 480px) {
+  .topbar {
+    padding: 0.7rem 0.8rem;
+    min-height: 56px;
+    gap: 0.4rem;
+    justify-content: space-between;
+  }
+
+  .topbar-left {
+    min-width: 70px;
+  }
+
+  .topbar-logo {
+    font-size: 1.1rem;
+    padding: 0.3rem 0.5rem;
+    letter-spacing: 0;
+  }
+
+  .topbar-center {
+    display: none;
+  }
+
+  .topbar-right {
+    gap: 0.4rem;
+  }
+
+  .dark-mode-toggle {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    font-size: 0.9rem;
+  }
+
+  .user-btn {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.8rem;
+    min-height: 36px;
+  }
+
+  .dropdown-menu {
+    width: calc(100% + 0.8rem);
+    max-width: 220px;
+    right: -0.4rem;
+  }
+
+  .dropdown-menu .logout-btn {
+    padding: 0.8rem 1rem;
+    font-size: 0.9rem;
+    min-height: 40px;
+  }
+
+  .topbar-logo:active {
+    transform: scale(0.96);
+  }
+}
+
+/* Very Small Mobile (< 360px) */
+@media (max-width: 360px) {
+  .topbar {
+    padding: 0.6rem 0.6rem;
+  }
+
+  .topbar-logo {
+    font-size: 1rem;
+  }
+
+  .dark-mode-toggle {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+  }
+
+  .user-btn {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.75rem;
+  }
+}

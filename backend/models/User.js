@@ -12,7 +12,9 @@ const userSchema = new mongoose.Schema(
   {
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true },
-    cart: [cartItemSchema]
+    cart: [cartItemSchema],
+    resetPasswordToken: { type: String, default: null },
+    resetPasswordExpires: { type: Date, default: null }
   },
   { timestamps: true }
 );

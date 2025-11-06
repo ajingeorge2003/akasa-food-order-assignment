@@ -2,12 +2,22 @@ import express from "express";
 import asyncHandler from "express-async-handler";
 import mongoose from "mongoose";
 import { v4 as uuidv4 } from "uuid";
+import nodemailer from "nodemailer";
 import { protect } from "../middleware/authMiddleware.js";
 import User from "../models/User.js";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
 
 const router = express.Router();
+
+// Initialize nodemailer transporter
+const transporter = nodemailer.createTransport({
+  service: process.env.EMAIL_SERVICE || "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD
+  }
+});
 
 // POST /api/orders/checkout
 router.post(
@@ -69,6 +79,21 @@ router.post(
       await session.commitTransaction();
       session.endSession();
 
+      // Send invoice email
+      try {
+        const invoiceHtml = generateInvoiceHtml(order[0], user.email, orderItems);
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: user.email,
+          subject: `Order Confirmation - Invoice #${order[0].orderId.slice(-6).toUpperCase()}`,
+          html: invoiceHtml
+        };
+        await transporter.sendMail(mailOptions);
+      } catch (emailErr) {
+        console.error("Failed to send invoice email:", emailErr);
+        // Don't fail the order if email fails
+      }
+
       res.status(201).json({ message: "Order placed", order: order[0] });
     } catch (err) {
       await session.abortTransaction();
@@ -77,6 +102,79 @@ router.post(
     }
   })
 );
+
+// Function to generate invoice HTML
+function generateInvoiceHtml(order, userEmail, orderItems) {
+  const itemsHtml = orderItems
+    .map(item => `
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.name}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: center;">${item.qty}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">₹${item.price}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">₹${(item.price * item.qty).toFixed(2)}</td>
+      </tr>
+    `)
+    .join("");
+
+  return `
+    <div style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
+      <div style="background-color: white; padding: 30px; border-radius: 8px; max-width: 600px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #667eea; margin: 0;">Akasa Food Order</h1>
+          <p style="color: #666; margin: 5px 0;">Your Order Confirmation</p>
+        </div>
+
+        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+          <p style="margin: 5px 0;"><strong>Order ID:</strong> ${order.orderId.slice(-6).toUpperCase()}</p>
+          <p style="margin: 5px 0;"><strong>Order Date:</strong> ${new Date(order.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <p style="margin: 5px 0;"><strong>Status:</strong> <span style="background-color: #e8f5e9; color: #2e7d32; padding: 3px 8px; border-radius: 3px;">${order.status || 'Pending'}</span></p>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <h3 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Order Items</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background-color: #f0f0f0;">
+                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #667eea;">Product</th>
+                <th style="padding: 10px; text-align: center; border-bottom: 2px solid #667eea;">Qty</th>
+                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #667eea;">Price</th>
+                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #667eea;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+            </tbody>
+          </table>
+        </div>
+
+        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <span>Subtotal:</span>
+            <span>₹${order.total.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <span>Shipping:</span>
+            <span>Free</span>
+          </div>
+          <div style="border-top: 2px solid #667eea; padding-top: 10px; display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; color: #667eea;">
+            <span>Total Amount:</span>
+            <span>₹${order.total.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <div style="background-color: #e3f2fd; padding: 15px; border-left: 4px solid #667eea; border-radius: 5px; margin-bottom: 20px;">
+          <p style="margin: 0; color: #1565c0;">✓ Thank you for your order! Your items will be prepared shortly.</p>
+        </div>
+
+        <div style="border-top: 1px solid #ddd; padding-top: 15px; color: #666; font-size: 12px; text-align: center;">
+          <p style="margin: 5px 0;">Order Confirmation sent to: <strong>${userEmail}</strong></p>
+          <p style="margin: 5px 0;">This is an automated email. Please do not reply to this message.</p>
+          <p style="margin: 5px 0; color: #999;">© 2024 Akasa Food Order. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
 
 // GET /api/orders - list user's orders
 router.get(

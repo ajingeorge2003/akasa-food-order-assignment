@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import '../styles/LandingPage.css'
+import TopBar from './TopBar'
 
 interface LandingPageProps {
   onGetStarted: () => void
@@ -18,8 +19,6 @@ export default function LandingPage({
   isDarkMode = false,
   onToggleDarkMode
 }: LandingPageProps) {
-  const [showDropdown, setShowDropdown] = useState(false)
-
   const handleFeatureClick = (phase: string) => {
     if (isLoggedIn && onNavigateToPhase) {
       onNavigateToPhase(phase)
@@ -30,41 +29,13 @@ export default function LandingPage({
 
   return (
     <div className={`landing-page ${isDarkMode ? 'dark-mode' : ''}`}>
-      {/* Top Bar */}
-      <header className="landing-header">
-        <div className="header-left">
-          <h1 className="header-logo">🍽️ Eato</h1>
-        </div>
-        <div className="header-right">
-          <button 
-            className="dark-mode-toggle"
-            onClick={onToggleDarkMode}
-            title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
-          >
-            {isDarkMode ? '☀️' : '🌙'}
-          </button>
-          {isLoggedIn && (
-            <div className="user-menu">
-              <button 
-                className="user-btn"
-                onClick={() => setShowDropdown(!showDropdown)}
-              >
-                👤 Account
-              </button>
-              {showDropdown && (
-                <div className="dropdown-menu">
-                  <button className="logout-btn" onClick={() => {
-                    onLogout?.()
-                    setShowDropdown(false)
-                  }}>
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </header>
+      {/* Top Bar - Now using TopBar component */}
+      <TopBar
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={onToggleDarkMode || (() => {})}
+        isLoggedIn={isLoggedIn}
+        onLogout={onLogout}
+      />
 
       {/* Hero Section */}
       <section className="hero">

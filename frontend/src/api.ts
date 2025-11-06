@@ -10,7 +10,9 @@ export const apiCall = async (endpoint: string, method: string = 'GET', body?: a
   const res = await fetch(`${API_BASE}${endpoint}`, options)
   if (!res.ok) {
     const err = await res.json()
-    throw new Error(err.message || `API error: ${res.status}`)
+    const error = new Error(err.message || `API error: ${res.status}`) as any
+    error.data = err // Attach additional error data
+    throw error
   }
   return res.json()
 }
@@ -20,6 +22,10 @@ export const auth = {
     apiCall('/auth/register', 'POST', { email, password }),
   login: (email: string, password: string) =>
     apiCall('/auth/login', 'POST', { email, password }),
+  requestPasswordReset: (email: string) =>
+    apiCall('/auth/forgot-password', 'POST', { email }),
+  resetPassword: (token: string, newPassword: string) =>
+    apiCall('/auth/reset-password', 'POST', { token, newPassword }),
 }
 
 export const products = {

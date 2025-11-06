@@ -5,6 +5,7 @@ import AuthTab from './components/AuthTab'
 import ProductsTab from './components/ProductsTab'
 import CartTab from './components/CartTab'
 import OrdersTab from './components/OrdersTab'
+import TopBar from './components/TopBar'
 
 function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
@@ -80,21 +81,13 @@ function App() {
 
   return (
     <div className={`app ${isDarkMode ? 'dark-mode' : ''}`}>
-      <header className="header">
-        <h1 className="logo" onClick={handleLogoClick} style={{ cursor: token ? 'pointer' : 'default' }}>
-          🍽️ Eato - The Food Ordering App
-        </h1>
-        <div className="header-controls">
-          <button 
-            className="dark-mode-toggle"
-            onClick={toggleDarkMode}
-            title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
-          >
-            {isDarkMode ? '☀️' : '🌙'}
-          </button>
-          {token && <button className="logout-btn" onClick={handleLogout}>Logout</button>}
-        </div>
-      </header>
+      <TopBar
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={toggleDarkMode}
+        isLoggedIn={!!token}
+        onLogout={handleLogout}
+        onLogoClick={token ? handleLogoClick : undefined}
+      />
 
       {!token ? (
         <AuthTab onLoginSuccess={setToken} />

@@ -27,10 +27,16 @@ export default function ProductsTab({ token, onCartUpdate }: ProductsTabProps) {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error'; productId?: string } | null>(null)
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({})
   const [lastAddedItem, setLastAddedItem] = useState<{ productId: string; qty: number } | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 6
 
   useEffect(() => {
     fetchProducts()
   }, [selectedCategory])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, selectedCategory])
 
   const fetchProducts = async () => {
     setLoading(true)
@@ -78,6 +84,24 @@ export default function ProductsTab({ token, onCartUpdate }: ProductsTabProps) {
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex)
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1)
+  }
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1)
+  }
+
+  const handlePageClick = (page: number) => {
+    setCurrentPage(page)
+  }
+
   return (
     <div className="products-container">
       <div className="category-filter">
@@ -105,57 +129,98 @@ export default function ProductsTab({ token, onCartUpdate }: ProductsTabProps) {
       ) : filteredProducts.length === 0 ? (
         <p>No products found</p>
       ) : (
-        <div className="products-grid">
-          {filteredProducts.map((product) => (
-            <div key={product._id} className="product-card">
-              {product.image && (
-                <img 
-                  src={product.image + "?w=400&h=200&fit=crop"} 
-                  alt={product.name} 
-                  className="product-image"
-                  loading="lazy"
-                />
-              )}
-              <div className="product-header">
-                <h3>{product.name}</h3>
-                <span className="category-badge">{product.category}</span>
-              </div>
-              {product.description && <p className="description">{product.description}</p>}
-              <div className="product-details">
-                <div className="price">₹{product.price}</div>
-                <div className="stock">
-                  {product.stock > 0 ? (
-                    <span className="in-stock">Stock: {product.stock}</span>
-                  ) : (
-                    <span className="out-of-stock">Out of Stock</span>
-                  )}
+        <>
+          {/* Products Grid */}
+          <div className="products-grid">
+            {paginatedProducts.map((product) => (
+              <div key={product._id} className="product-card">
+                {product.image && (
+                  <img 
+                    src={product.image + "?w=400&h=200&fit=crop"} 
+                    alt={product.name} 
+                    className="product-image"
+                    loading="lazy"
+                  />
+                )}
+                <div className="product-header">
+                  <h3>{product.name}</h3>
+                  <span className="category-badge">{product.category}</span>
+                </div>
+                {product.description && <p className="description">{product.description}</p>}
+                <div className="product-details">
+                  <div className="price">₹{product.price}</div>
+                  <div className="stock">
+                    {product.stock > 0 ? (
+                      <span className="in-stock">Stock: {product.stock}</span>
+                    ) : (
+                      <span className="out-of-stock">Out of Stock</span>
+                    )}
+                  </div>
+                </div>
+                <div className="product-actions">
+                  <input
+                    type="number"
+                    min="1"
+                    max={product.stock}
+                    value={quantities[product._id] || 1}
+                    onChange={(e) =>
+                      setQuantities({
+                        ...quantities,
+                        [product._id]: parseInt(e.target.value) || 1,
+                      })
+                    }
+                    disabled={product.stock === 0}
+                  />
+                  <button
+                    onClick={() => handleAddToCart(product)}
+                    disabled={product.stock === 0}
+                    className="add-btn"
+                  >
+                    Add to Cart
+                  </button>
                 </div>
               </div>
-              <div className="product-actions">
-                <input
-                  type="number"
-                  min="1"
-                  max={product.stock}
-                  value={quantities[product._id] || 1}
-                  onChange={(e) =>
-                    setQuantities({
-                      ...quantities,
-                      [product._id]: parseInt(e.target.value) || 1,
-                    })
-                  }
-                  disabled={product.stock === 0}
-                />
-                <button
-                  onClick={() => handleAddToCart(product)}
-                  disabled={product.stock === 0}
-                  className="add-btn"
-                >
-                  Add to Cart
-                </button>
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="pagination">
+              <button
+                className="pagination-btn prev-btn"
+                onClick={handlePreviousPage}
+                disabled={currentPage === 1}
+              >
+                ← Previous
+              </button>
+
+              <div className="pagination-numbers">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+                    onClick={() => handlePageClick(page)}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                className="pagination-btn next-btn"
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+              >
+                Next →
+              </button>
+
+              <div className="pagination-info">
+                <span>Page {currentPage} of {totalPages}</span>
+                <span className="product-count">({filteredProducts.length} products)</span>
               </div>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
       {toast && (
