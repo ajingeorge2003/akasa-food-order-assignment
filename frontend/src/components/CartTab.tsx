@@ -16,6 +16,85 @@ interface CartItem {
   qty: number
 }
 
+interface CartItemRowProps {
+  item: CartItem
+  onUpdateQty: (productId: string, qty: number) => Promise<void>
+  onRemove: (productId: string) => Promise<void>
+}
+
+// Isolated cart item component - only re-renders when its props change
+const CartItemRow = ({ item, onUpdateQty, onRemove }: CartItemRowProps) => {
+  const [localQty, setLocalQty] = useState(item.qty)
+  const [isUpdating, setIsUpdating] = useState(false)
+
+  const handleQtyChange = async (newQty: number) => {
+    if (newQty <= 0) {
+      setIsUpdating(true)
+      try {
+        await onRemove(item.product._id)
+      } finally {
+        setIsUpdating(false)
+      }
+      return
+    }
+    setLocalQty(newQty)
+    setIsUpdating(true)
+    try {
+      await onUpdateQty(item.product._id, newQty)
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  return (
+    <div className="cart-item">
+      <div className="item-info">
+        <h4>{item.product.name}</h4>
+        <p className="price">₹{item.product.price}</p>
+      </div>
+      <div className="item-qty">
+        <button 
+          onClick={() => handleQtyChange(localQty - 1)}
+          disabled={isUpdating}
+          className="qty-btn"
+        >
+          −
+        </button>
+        <input
+          type="number"
+          min="1"
+          max="999"
+          value={localQty}
+          onChange={(e) => {
+            const val = Math.max(1, parseInt(e.target.value) || 1)
+            setLocalQty(val)
+          }}
+          onBlur={() => handleQtyChange(localQty)}
+          disabled={isUpdating}
+          className="qty-input"
+        />
+        <button 
+          onClick={() => handleQtyChange(localQty + 1)}
+          disabled={isUpdating}
+          className="qty-btn"
+        >
+          +
+        </button>
+      </div>
+      <div className="item-total">
+        <p>₹{(item.product.price * localQty).toFixed(2)}</p>
+      </div>
+      <button
+        className="remove-btn"
+        onClick={() => onRemove(item.product._id)}
+        disabled={isUpdating}
+      >
+        Remove
+      </button>
+    </div>
+  )
+}
+
 export default function CartTab({ token, onCheckoutSuccess, onCartUpdate }: CartTabProps) {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -26,7 +105,7 @@ export default function CartTab({ token, onCheckoutSuccess, onCartUpdate }: Cart
 
   useEffect(() => {
     fetchCart()
-  }, [])
+  }, [token])
 
   useEffect(() => {
     const timer = setTimeout(() => setSuccessMsg(''), 3000)
@@ -48,13 +127,14 @@ export default function CartTab({ token, onCheckoutSuccess, onCartUpdate }: Cart
   }
 
   const handleUpdateQty = async (productId: string, newQty: number) => {
-    if (newQty <= 0) {
-      await handleRemove(productId)
-      return
-    }
     try {
       await cart.update(productId, newQty, token)
-      fetchCart()
+      // Update local state optimistically
+      setCartItems(prevItems =>
+        prevItems.map(item =>
+          item.product._id === productId ? { ...item, qty: newQty } : item
+        )
+      )
     } catch (err: any) {
       setError(err.message)
     }
@@ -63,7 +143,9 @@ export default function CartTab({ token, onCheckoutSuccess, onCartUpdate }: Cart
   const handleRemove = async (productId: string) => {
     try {
       await cart.remove(productId, token)
-      fetchCart()
+      // Remove from local state optimistically
+      setCartItems(prevItems => prevItems.filter(item => item.product._id !== productId))
+      onCartUpdate(cartItems.length - 1)
       setSuccessMsg('Item removed from cart')
     } catch (err: any) {
       setError(err.message)
@@ -96,8 +178,8 @@ export default function CartTab({ token, onCheckoutSuccess, onCartUpdate }: Cart
       <div className="checkout-success">
         <h2>✅ Order Placed!</h2>
         <div className="order-details">
-          <p><strong>Order ID:</strong> {orderResult.orderId}</p>
-          <p><strong>Total:</strong> ₹{orderResult.total}</p>
+          <p><strong>Order ID:</strong> {orderResult.orderId.slice(-6).toUpperCase()}</p>
+          <p><strong>Total:</strong> ₹{orderResult.total.toFixed(2)}</p>
           <p><strong>Status:</strong> {orderResult.status}</p>
           <p className="items-count">Items: {orderResult.items.length}</p>
         </div>
@@ -115,49 +197,28 @@ export default function CartTab({ token, onCheckoutSuccess, onCartUpdate }: Cart
       {loading ? (
         <p>Loading cart...</p>
       ) : cartItems.length === 0 ? (
-        <p className="empty-cart">Cart is empty</p>
+        <p className="empty-cart">Your cart is empty</p>
       ) : (
         <>
           <div className="cart-items">
             {cartItems.map((item) => (
-              <div key={item.product._id} className="cart-item">
-                <div className="item-info">
-                  <h4>{item.product.name}</h4>
-                  <p className="price">₹{item.product.price}</p>
-                </div>
-                <div className="item-qty">
-                  <button onClick={() => handleUpdateQty(item.product._id, item.qty - 1)}>-</button>
-                  <input
-                    type="number"
-                    min="1"
-                    value={item.qty}
-                    onChange={(e) =>
-                      handleUpdateQty(item.product._id, parseInt(e.target.value) || 1)
-                    }
-                  />
-                  <button onClick={() => handleUpdateQty(item.product._id, item.qty + 1)}>+</button>
-                </div>
-                <div className="item-total">
-                  <p>₹{item.product.price * item.qty}</p>
-                </div>
-                <button
-                  className="remove-btn"
-                  onClick={() => handleRemove(item.product._id)}
-                >
-                  Remove
-                </button>
-              </div>
+              <CartItemRow
+                key={item.product._id}
+                item={item}
+                onUpdateQty={handleUpdateQty}
+                onRemove={handleRemove}
+              />
             ))}
           </div>
 
           <div className="cart-summary">
             <div className="summary-row">
               <span>Subtotal:</span>
-              <span>₹{total}</span>
+              <span>₹{total.toFixed(2)}</span>
             </div>
             <div className="summary-total">
               <span>Total:</span>
-              <span className="amount">₹{total}</span>
+              <span className="amount">₹{total.toFixed(2)}</span>
             </div>
             <button
               className="checkout-btn"

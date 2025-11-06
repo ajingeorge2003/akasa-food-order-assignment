@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { products, cart } from '../api'
+import Toast from './Toast'
 
 interface ProductsTabProps {
   token: string
@@ -13,25 +14,23 @@ interface Product {
   price: number
   stock: number
   description?: string
+  image?: string
 }
 
 export default function ProductsTab({ token, onCartUpdate }: ProductsTabProps) {
   const [productList, setProductList] = useState<Product[]>([])
   const [categories, setCategories] = useState<string[]>([])
   const [selectedCategory, setSelectedCategory] = useState('All')
+  const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [successMsg, setSuccessMsg] = useState('')
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error'; productId?: string } | null>(null)
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({})
+  const [lastAddedItem, setLastAddedItem] = useState<{ productId: string; qty: number } | null>(null)
 
   useEffect(() => {
     fetchProducts()
   }, [selectedCategory])
-
-  useEffect(() => {
-    const timer = setTimeout(() => setSuccessMsg(''), 3000)
-    return () => clearTimeout(timer)
-  }, [successMsg])
 
   const fetchProducts = async () => {
     setLoading(true)
@@ -52,14 +51,32 @@ export default function ProductsTab({ token, onCartUpdate }: ProductsTabProps) {
     const qty = quantities[product._id] || 1
     try {
       await cart.add(product._id, qty, token)
-      setSuccessMsg(`Added ${product.name} to cart!`)
+      setLastAddedItem({ productId: product._id, qty })
+      setToast({ message: `Added ${qty}x ${product.name} to cart!`, type: 'success', productId: product._id })
       setQuantities({ ...quantities, [product._id]: 1 })
+      const cartItems = await cart.get(token)
+      onCartUpdate(cartItems.length)
+    } catch (err: any) {
+      setToast({ message: err.message, type: 'error' })
+    }
+  }
+
+  const handleUndoAdd = async () => {
+    if (!lastAddedItem) return
+    try {
+      await cart.remove(lastAddedItem.productId, token)
+      setLastAddedItem(null)
       const cartItems = await cart.get(token)
       onCartUpdate(cartItems.length)
     } catch (err: any) {
       setError(err.message)
     }
   }
+
+  // Filter products by category and search query
+  const filteredProducts = productList.filter((product) =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   return (
     <div className="products-container">
@@ -72,19 +89,33 @@ export default function ProductsTab({ token, onCartUpdate }: ProductsTabProps) {
             </option>
           ))}
         </select>
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="search-input"
+        />
       </div>
 
       {error && <div className="error">{error}</div>}
-      {successMsg && <div className="success">{successMsg}</div>}
 
       {loading ? (
         <p>Loading products...</p>
-      ) : productList.length === 0 ? (
+      ) : filteredProducts.length === 0 ? (
         <p>No products found</p>
       ) : (
         <div className="products-grid">
-          {productList.map((product) => (
+          {filteredProducts.map((product) => (
             <div key={product._id} className="product-card">
+              {product.image && (
+                <img 
+                  src={product.image + "?w=400&h=200&fit=crop"} 
+                  alt={product.name} 
+                  className="product-image"
+                  loading="lazy"
+                />
+              )}
               <div className="product-header">
                 <h3>{product.name}</h3>
                 <span className="category-badge">{product.category}</span>
@@ -125,6 +156,15 @@ export default function ProductsTab({ token, onCartUpdate }: ProductsTabProps) {
             </div>
           ))}
         </div>
+      )}
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onUndo={toast.type === 'success' ? handleUndoAdd : undefined}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   )
