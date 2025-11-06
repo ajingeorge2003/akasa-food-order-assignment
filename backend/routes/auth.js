@@ -3,8 +3,8 @@ import asyncHandler from "express-async-handler";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
 import User from "../models/User.js";
+import createTransporter, { sendEmailWithTimeout, verifyEmailConfig } from "../utils/emailService.js";
 
 const router = express.Router();
 
@@ -13,21 +13,7 @@ const generateToken = (id) => {
 };
 
 // Initialize nodemailer transporter
-const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
-  },
-  connectionTimeout: 10000, // 10 seconds
-  socketTimeout: 10000, // 10 seconds
-  pool: {
-    maxConnections: 5,
-    maxMessages: 100,
-    rateDelta: 4000,
-    rateLimit: 14
-  }
-});
+const transporter = createTransporter();
 
 // POST /api/auth/register
 router.post(
@@ -118,12 +104,7 @@ router.post(
     };
 
     try {
-      const emailPromise = transporter.sendMail(mailOptions);
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Email send timeout")), 8000)
-      );
-      
-      await Promise.race([emailPromise, timeoutPromise]);
+      await sendEmailWithTimeout(transporter, mailOptions);
       res.json({ message: "Password reset link sent to your email" });
     } catch (err) {
       console.error("Email sending failed:", err.message);

@@ -2,8 +2,8 @@ import express from "express";
 import asyncHandler from "express-async-handler";
 import mongoose from "mongoose";
 import { v4 as uuidv4 } from "uuid";
-import nodemailer from "nodemailer";
 import { protect } from "../middleware/authMiddleware.js";
+import createTransporter, { sendEmailWithTimeout } from "../utils/emailService.js";
 import User from "../models/User.js";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
@@ -11,21 +11,7 @@ import Order from "../models/Order.js";
 const router = express.Router();
 
 // Initialize nodemailer transporter
-const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
-  },
-  connectionTimeout: 10000, // 10 seconds
-  socketTimeout: 10000, // 10 seconds
-  pool: {
-    maxConnections: 5,
-    maxMessages: 100,
-    rateDelta: 4000,
-    rateLimit: 14
-  }
-});
+const transporter = createTransporter();
 
 // POST /api/orders/checkout
 router.post(
@@ -98,13 +84,7 @@ router.post(
             html: invoiceHtml
           };
           
-          // Set a timeout for email sending to prevent hanging
-          const emailPromise = transporter.sendMail(mailOptions);
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Email send timeout")), 8000)
-          );
-          
-          await Promise.race([emailPromise, timeoutPromise]);
+          await sendEmailWithTimeout(transporter, mailOptions);
         } catch (emailErr) {
           console.error("Failed to send invoice email:", emailErr.message);
           // Don't fail the order if email fails - log it and continue
