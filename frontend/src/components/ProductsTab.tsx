@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { products, cart } from '../api'
-import Toast from './Toast'
+import Toast from './Toast.tsx'
 
 interface ProductsTabProps {
   token: string

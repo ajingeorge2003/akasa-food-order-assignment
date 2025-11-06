@@ -182,7 +182,7 @@ export default function CartTab({ token, onCheckoutSuccess, onCartUpdate }: Cart
   if (orderResult) {
     return (
       <div className="checkout-success">
-        <h2>✅ Order Placed!</h2>
+        <h2>Order Placed!</h2>
         <div className="order-details">
           <p><strong>Order ID:</strong> {orderResult.orderId.slice(-6).toUpperCase()}</p>
           <p><strong>Total:</strong> ₹{orderResult.total.toFixed(2)}</p>
@@ -202,7 +202,7 @@ export default function CartTab({ token, onCheckoutSuccess, onCartUpdate }: Cart
           <div className="error">{error}</div>
           {insufficientItems.length > 0 && (
             <div className="insufficient-items-alert">
-              <h4>❌ Items with Insufficient Stock:</h4>
+              <h4>Items with Insufficient Stock:</h4>
               <ul>
                 {insufficientItems.map((item: any) => (
                   <li key={item.product}>

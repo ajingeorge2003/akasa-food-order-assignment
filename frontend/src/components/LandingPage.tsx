@@ -1,6 +1,5 @@
-import { useState } from 'react'
 import '../styles/LandingPage.css'
-import TopBar from './TopBar'
+import TopBar from './TopBar.tsx'
 
 interface LandingPageProps {
   onGetStarted: () => void
@@ -51,7 +50,7 @@ export default function LandingPage({
             </p>
             {!isLoggedIn && (
               <button className="cta-button" onClick={onGetStarted}>
-                Get Started 🍕
+                Get Started
               </button>
             )}
           </div>
@@ -72,7 +71,7 @@ export default function LandingPage({
             onClick={() => handleFeatureClick('products')}
             style={{ cursor: 'pointer' }}
           >
-            <div className="feature-icon">🔍</div>
+            <div className="feature-icon">�</div>
             <h3>Browse Menu</h3>
             <p>Browse through hundreds of delicious food items by category</p>
             {isLoggedIn && <span className="card-hint">Click to browse →</span>}
@@ -82,7 +81,7 @@ export default function LandingPage({
             onClick={() => handleFeatureClick('cart')}
             style={{ cursor: 'pointer' }}
           >
-            <div className="feature-icon">🛒</div>
+            <div className="feature-icon">�</div>
             <h3>Smart Cart</h3>
             <p>Add items to cart, manage quantities, and review before checkout</p>
             {isLoggedIn && <span className="card-hint">Click to view cart →</span>}
@@ -102,7 +101,7 @@ export default function LandingPage({
             onClick={() => handleFeatureClick('orders')}
             style={{ cursor: 'pointer' }}
           >
-            <div className="feature-icon">⚡</div>
+            <div className="feature-icon">📍</div>
             <h3>Track Delivery</h3>
             <p>Track your order status from confirmation to delivery</p>
             {isLoggedIn && <span className="card-hint">Click to track →</span>}
@@ -113,7 +112,7 @@ export default function LandingPage({
             <p>Your data is protected with industry-standard security measures</p>
           </div>
           <div className="feature-card">
-            <div className="feature-icon">😊</div>
+            <div className="feature-icon">⭐</div>
             <h3>Great Deals</h3>
             <p>Enjoy regular promotions and exclusive offers on your favorites</p>
           </div>
@@ -173,7 +172,7 @@ export default function LandingPage({
           <p>Join thousands of happy customers enjoying delicious food delivered to their homes</p>
           {!isLoggedIn && (
             <button className="cta-button-large" onClick={onGetStarted}>
-              Start Ordering Now 🚀
+              Start Ordering Now
             </button>
           )}
         </div>

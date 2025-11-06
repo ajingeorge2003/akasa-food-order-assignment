@@ -11,7 +11,6 @@ export default function AuthTab({ onLoginSuccess }: AuthTabProps) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
   const [isForgotPassword, setIsForgotPassword] = useState(false)
   const [resetEmail, setResetEmail] = useState('')
   const [resetLoading, setResetLoading] = useState(false)
@@ -69,23 +68,27 @@ export default function AuthTab({ onLoginSuccess }: AuthTabProps) {
               </div>
               <div className="form-group">
                 <label>Password:</label>
-                <div className="password-input-group">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              {isLogin && (
+                <div className="text-right mb-4">
                   <button
                     type="button"
-                    className="password-toggle-btn"
-                    onClick={() => setShowPassword(!showPassword)}
-                    title={showPassword ? 'Hide password' : 'Show password'}
+                    className="link-btn text-sm"
+                    onClick={() => {
+                      setIsForgotPassword(true)
+                      setError('')
+                    }}
                   >
-                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                    Forgot password?
                   </button>
                 </div>
-              </div>
+              )}
               {error && <div className="error">{error}</div>}
               <button type="submit" disabled={loading}>
                 {loading ? 'Loading...' : isLogin ? 'Login' : 'Register'}
@@ -103,19 +106,6 @@ export default function AuthTab({ onLoginSuccess }: AuthTabProps) {
                 {isLogin ? 'Register' : 'Login'}
               </button>
             </p>
-            {isLogin && (
-              <p>
-                <button
-                  className="link-btn"
-                  onClick={() => {
-                    setIsForgotPassword(true)
-                    setError('')
-                  }}
-                >
-                  Forgot Password?
-                </button>
-              </p>
-            )}
           </>
         ) : (
           <>

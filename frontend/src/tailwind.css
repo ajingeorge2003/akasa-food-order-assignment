@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .password-toggle-btn {
+    @apply absolute right-3 top-1/2 -translate-y-1/2 bg-none border-none cursor-pointer p-0 text-gray-400 transition-all z-10 w-6 h-6 flex items-center justify-center hover:text-blue-500;
+  }
+
+  .password-toggle-btn::before {
+    content: '';
+    @apply absolute w-5 h-3 border-2 border-current rounded-full;
+  }
+
+  .password-toggle-btn::after {
+    content: '';
+    @apply absolute w-2 h-2 bg-current rounded-full z-10;
+  }
+}

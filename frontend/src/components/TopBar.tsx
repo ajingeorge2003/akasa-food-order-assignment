@@ -57,7 +57,7 @@ export default function TopBar({
               onClick={() => setShowDropdown(!showDropdown)}
               aria-label="User menu"
             >
-              👤 Account
+              Account
             </button>
             {showDropdown && (
               <div className="dropdown-menu">
@@ -65,7 +65,7 @@ export default function TopBar({
                   className="logout-btn"
                   onClick={handleLogout}
                 >
-                  🚪 Logout
+                  Logout
                 </button>
               </div>
             )}

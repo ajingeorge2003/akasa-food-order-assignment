@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import LandingPage from './components/LandingPage'
-import AuthTab from './components/AuthTab'
-import ProductsTab from './components/ProductsTab'
-import CartTab from './components/CartTab'
-import OrdersTab from './components/OrdersTab'
-import TopBar from './components/TopBar'
+import LandingPage from './components/LandingPage.tsx'
+import AuthTab from './components/AuthTab.tsx'
+import ProductsTab from './components/ProductsTab.tsx'
+import CartTab from './components/CartTab.tsx'
+import OrdersTab from './components/OrdersTab.tsx'
+import TopBar from './components/TopBar.tsx'
 
 function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
@@ -98,19 +98,19 @@ function App() {
               className={`tab-btn ${activeTab === 'products' ? 'active' : ''}`}
               onClick={() => setActiveTab('products')}
             >
-              🔍 Browse
+              Browse
             </button>
             <button
               className={`tab-btn ${activeTab === 'cart' ? 'active' : ''}`}
               onClick={() => setActiveTab('cart')}
             >
-              🛒 Cart ({cartCount})
+              Cart ({cartCount})
             </button>
             <button
               className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
               onClick={() => setActiveTab('orders')}
             >
-              📦 Orders
+              Orders
             </button>
           </div>
 
