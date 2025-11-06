@@ -53,7 +53,7 @@ export default function OrdersTab({ token }: OrdersTabProps) {
                   <strong>Order #</strong> {order.orderId.slice(-6).toUpperCase()}
                 </div>
                 <div className={`order-status ${order.status}`}>
-                  {order.status === 'delivered' ? '✅ Delivered' : '⏳ Pending'}
+                  {order.status === 'delivered' ? 'Delivered' : 'Pending'}
                 </div>
               </div>
               <div className="order-date">

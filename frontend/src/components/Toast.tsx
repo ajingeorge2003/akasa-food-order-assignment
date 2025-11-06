@@ -31,9 +31,9 @@ export default function Toast({ message, type = 'success', duration = 3000, onUn
     <div className={`toast toast-${type} ${isExiting ? 'toast-exit' : ''}`}>
       <div className="toast-content">
         <span className="toast-icon">
-          {type === 'success' && '✅'}
-          {type === 'error' && '❌'}
-          {type === 'info' && 'ℹ️'}
+          {type === 'success' && '✓'}
+          {type === 'error' && '✕'}
+          {type === 'info' && 'ℹ'}
         </span>
         <span className="toast-message">{message}</span>
         {onUndo && (
