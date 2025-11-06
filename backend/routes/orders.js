@@ -16,6 +16,14 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD
+  },
+  connectionTimeout: 10000, // 10 seconds
+  socketTimeout: 10000, // 10 seconds
+  pool: {
+    maxConnections: 5,
+    maxMessages: 100,
+    rateDelta: 4000,
+    rateLimit: 14
   }
 });
 
@@ -79,19 +87,28 @@ router.post(
       await session.commitTransaction();
       session.endSession();
 
-      // Send invoice email
-      try {
-        const invoiceHtml = generateInvoiceHtml(order[0], user.email, orderItems);
-        const mailOptions = {
-          from: process.env.EMAIL_USER,
-          to: user.email,
-          subject: `Order Confirmation - Invoice #${order[0].orderId.slice(-6).toUpperCase()}`,
-          html: invoiceHtml
-        };
-        await transporter.sendMail(mailOptions);
-      } catch (emailErr) {
-        console.error("Failed to send invoice email:", emailErr);
-        // Don't fail the order if email fails
+      // Send invoice email (non-blocking)
+      if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+        try {
+          const invoiceHtml = generateInvoiceHtml(order[0], user.email, orderItems);
+          const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: user.email,
+            subject: `Order Confirmation - Invoice #${order[0].orderId.slice(-6).toUpperCase()}`,
+            html: invoiceHtml
+          };
+          
+          // Set a timeout for email sending to prevent hanging
+          const emailPromise = transporter.sendMail(mailOptions);
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Email send timeout")), 8000)
+          );
+          
+          await Promise.race([emailPromise, timeoutPromise]);
+        } catch (emailErr) {
+          console.error("Failed to send invoice email:", emailErr.message);
+          // Don't fail the order if email fails - log it and continue
+        }
       }
 
       res.status(201).json({ message: "Order placed", order: order[0] });

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import '../styles/TopBar.css'
 
 interface TopBarProps {
@@ -16,11 +15,9 @@ export default function TopBar({
   onLogout,
   onLogoClick
 }: TopBarProps) {
-  const [showDropdown, setShowDropdown] = useState(false)
 
   const handleLogout = () => {
     onLogout?.()
-    setShowDropdown(false)
   }
 
   return (
@@ -51,25 +48,12 @@ export default function TopBar({
         </button>
 
         {isLoggedIn && (
-          <div className="user-menu">
-            <button
-              className="user-btn"
-              onClick={() => setShowDropdown(!showDropdown)}
-              aria-label="User menu"
-            >
-              Account
-            </button>
-            {showDropdown && (
-              <div className="dropdown-menu">
-                <button
-                  className="logout-btn"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
+          <button
+            className="logout-btn"
+            onClick={handleLogout}
+          >
+            Logout
+          </button>
         )}
       </div>
     </header>
