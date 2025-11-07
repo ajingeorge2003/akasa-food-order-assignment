@@ -78,7 +78,7 @@ router.post(
         try {
           const invoiceHtml = generateInvoiceHtml(order[0], user.email, orderItems);
           const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
             to: user.email,
             subject: `Order Confirmation - Invoice #${order[0].orderId.slice(-6).toUpperCase()}`,
             html: invoiceHtml

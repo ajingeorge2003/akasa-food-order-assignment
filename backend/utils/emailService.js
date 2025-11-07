@@ -36,11 +36,33 @@ const createTransporter = () => {
     });
   }
 
-  // SendGrid Configuration (Recommended for production)
+  // Brevo Configuration (Recommended for production - 300 free emails/day)
+  if (emailService === 'brevo') {
+    return nodemailer.createTransport({
+      host: 'smtp-relay.brevo.com',
+      port: 587,
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: emailUser, // Your email or Brevo SMTP login
+        pass: emailPassword, // Your Brevo API key
+      },
+      connectionTimeout: 10000,
+      socketTimeout: 10000,
+      pool: {
+        maxConnections: 5,
+        maxMessages: 100,
+        rateDelta: 4000,
+        rateLimit: 14,
+      },
+    });
+  }
+
+  // SendGrid Configuration
   if (emailService === 'sendgrid') {
     return nodemailer.createTransport({
       host: 'smtp.sendgrid.net',
       port: 587,
+      secure: false,
       auth: {
         user: 'apikey',
         pass: emailPassword, // SendGrid API Key
@@ -54,11 +76,12 @@ const createTransporter = () => {
     });
   }
 
-  // Mailgun Configuration (Alternative for production)
+  // Mailgun Configuration
   if (emailService === 'mailgun') {
     return nodemailer.createTransport({
       host: 'smtp.mailgun.org',
       port: 587,
+      secure: false,
       auth: {
         user: emailUser, // Your Mailgun domain
         pass: emailPassword, // Your Mailgun password
@@ -72,7 +95,7 @@ const createTransporter = () => {
     });
   }
 
-  // Resend Configuration (Modern alternative)
+  // Resend Configuration
   if (emailService === 'resend') {
     return nodemailer.createTransport({
       host: 'smtp.resend.com',
