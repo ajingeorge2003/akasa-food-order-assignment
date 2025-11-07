@@ -71,7 +71,7 @@ export default function LandingPage({
             onClick={() => handleFeatureClick('products')}
             style={{ cursor: 'pointer' }}
           >
-            <div className="feature-icon">�</div>
+            <div className="feature-icon">🍽️</div>
             <h3>Browse Menu</h3>
             <p>Browse through hundreds of delicious food items by category</p>
             {isLoggedIn && <span className="card-hint">Click to browse →</span>}
@@ -81,7 +81,7 @@ export default function LandingPage({
             onClick={() => handleFeatureClick('cart')}
             style={{ cursor: 'pointer' }}
           >
-            <div className="feature-icon">�</div>
+            <div className="feature-icon">🛒</div>
             <h3>Smart Cart</h3>
             <p>Add items to cart, manage quantities, and review before checkout</p>
             {isLoggedIn && <span className="card-hint">Click to view cart →</span>}
