@@ -9,6 +9,7 @@ import productRoutes from "./routes/products.js";
 import cartRoutes from "./routes/cart.js";
 import orderRoutes from "./routes/orders.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
+import { verifyEmailConfig } from "./utils/emailService.js";
 
 dotenv.config();
 
@@ -24,6 +25,19 @@ const limiter = rateLimit({ windowMs: 60 * 1000, max: 200 });
 app.use(limiter);
 
 app.get("/", (req, res) => res.send("API is running..."));
+
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    email: verifyEmailConfig(),
+    environment: {
+      nodeEnv: process.env.NODE_ENV,
+      hasMongoUri: !!process.env.MONGO_URI,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+    }
+  });
+});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
