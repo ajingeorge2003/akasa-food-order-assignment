@@ -158,6 +158,22 @@ export default function ProductsTab({ token, onCartUpdate }: ProductsTabProps) {
                   </div>
                 </div>
                 <div className="product-actions">
+                  <button
+                    className="qty-decrease-btn"
+                    onClick={() => {
+                      const currentQty = quantities[product._id] || 1
+                      if (currentQty > 1) {
+                        setQuantities({
+                          ...quantities,
+                          [product._id]: currentQty - 1,
+                        })
+                      }
+                    }}
+                    disabled={product.stock === 0}
+                    title="Decrease quantity"
+                  >
+                    −
+                  </button>
                   <input
                     type="number"
                     min="1"
@@ -170,7 +186,24 @@ export default function ProductsTab({ token, onCartUpdate }: ProductsTabProps) {
                       })
                     }
                     disabled={product.stock === 0}
+                    className="qty-input"
                   />
+                  <button
+                    className="qty-increase-btn"
+                    onClick={() => {
+                      const currentQty = quantities[product._id] || 1
+                      if (currentQty < product.stock) {
+                        setQuantities({
+                          ...quantities,
+                          [product._id]: currentQty + 1,
+                        })
+                      }
+                    }}
+                    disabled={product.stock === 0}
+                    title="Increase quantity"
+                  >
+                    +
+                  </button>
                   <button
                     onClick={() => handleAddToCart(product)}
                     disabled={product.stock === 0}
