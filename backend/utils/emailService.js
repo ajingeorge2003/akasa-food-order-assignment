@@ -1,156 +1,96 @@
-import nodemailer from 'nodemailer';
+import * as brevo from '@getbrevo/brevo';
 
 /**
- * Email Service Configuration
- * Supports multiple email providers for better reliability in production
+ * Brevo Email Service Configuration
+ * Uses official Brevo SDK for reliable email delivery
  */
 
-const createTransporter = () => {
-  const emailService = process.env.EMAIL_SERVICE || 'gmail';
-  const emailUser = process.env.EMAIL_USER;
-  const emailPassword = process.env.EMAIL_PASSWORD;
-
-  if (!emailUser || !emailPassword) {
-    console.warn('⚠️ Email credentials not configured. Password reset emails will not be sent.');
+// Create and configure Brevo API client
+const createBrevoClient = () => {
+  if (!process.env.EMAIL_PASSWORD) {
+    console.warn('⚠️ Brevo API key not configured.');
     return null;
   }
 
-  // Gmail Configuration
-  if (emailService === 'gmail') {
-    return nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: emailUser,
-        pass: emailPassword, // Use Gmail App Password, not your regular password
-      },
-      connectionTimeout: 10000,
-      socketTimeout: 10000,
-      pool: {
-        maxConnections: 3,
-        maxMessages: 50,
-        rateDelta: 4000,
-        rateLimit: 14,
-      },
-      secure: true,
-      requireTLS: true,
-    });
-  }
-
-  // Brevo Configuration (Recommended for production - 300 free emails/day)
-  if (emailService === 'brevo') {
-    return nodemailer.createTransport({
-      host: 'smtp-relay.brevo.com',
-      port: 587,
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user: emailUser, // Your email or Brevo SMTP login
-        pass: emailPassword, // Your Brevo API key
-      },
-      connectionTimeout: 10000,
-      socketTimeout: 10000,
-      pool: {
-        maxConnections: 5,
-        maxMessages: 100,
-        rateDelta: 4000,
-        rateLimit: 14,
-      },
-    });
-  }
-
-  // SendGrid Configuration
-  if (emailService === 'sendgrid') {
-    return nodemailer.createTransport({
-      host: 'smtp.sendgrid.net',
-      port: 587,
-      secure: false,
-      auth: {
-        user: 'apikey',
-        pass: emailPassword, // SendGrid API Key
-      },
-      connectionTimeout: 10000,
-      socketTimeout: 10000,
-      pool: {
-        maxConnections: 5,
-        maxMessages: 100,
-      },
-    });
-  }
-
-  // Mailgun Configuration
-  if (emailService === 'mailgun') {
-    return nodemailer.createTransport({
-      host: 'smtp.mailgun.org',
-      port: 587,
-      secure: false,
-      auth: {
-        user: emailUser, // Your Mailgun domain
-        pass: emailPassword, // Your Mailgun password
-      },
-      connectionTimeout: 10000,
-      socketTimeout: 10000,
-      pool: {
-        maxConnections: 5,
-        maxMessages: 100,
-      },
-    });
-  }
-
-  // Resend Configuration
-  if (emailService === 'resend') {
-    return nodemailer.createTransport({
-      host: 'smtp.resend.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: 'resend',
-        pass: emailPassword, // Resend API Key
-      },
-    });
-  }
-
-  // Default fallback to Gmail
-  console.warn(`⚠️ Unknown email service: ${emailService}. Falling back to Gmail.`);
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: emailUser,
-      pass: emailPassword,
-    },
-    connectionTimeout: 10000,
-    socketTimeout: 10000,
-    pool: {
-      maxConnections: 3,
-      maxMessages: 50,
-    },
-  });
+  const apiInstance = new brevo.TransactionalEmailsApi();
+  apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.EMAIL_PASSWORD);
+  return apiInstance;
 };
 
+const apiInstance = createBrevoClient();
+
 /**
- * Send email with timeout protection
- * @param {Object} transporter - Nodemailer transporter
+ * Send email using Brevo SDK
  * @param {Object} mailOptions - Email options (from, to, subject, html)
- * @param {number} timeout - Timeout in milliseconds (default: 8000)
  * @returns {Promise} - Email send result
  */
-export const sendEmailWithTimeout = async (transporter, mailOptions, timeout = 8000) => {
-  if (!transporter) {
-    console.warn('⚠️ Email transporter not configured. Email will not be sent.');
-    return { skipped: true, reason: 'Email service not configured' };
+export const sendEmailWithTimeout = async (mailOptions, timeout = 10000) => {
+  if (!apiInstance) {
+    console.warn('⚠️ Brevo API client not initialized. Email will not be sent.');
+    return { skipped: true, reason: 'Brevo API client not initialized' };
+  }
+
+  if (!process.env.EMAIL_PASSWORD) {
+    console.warn('⚠️ Brevo API key not configured. Email will not be sent.');
+    return { skipped: true, reason: 'Brevo API key not configured' };
   }
 
   try {
-    const emailPromise = transporter.sendMail(mailOptions);
+    // Prepare email data for Brevo
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    
+    sendSmtpEmail.to = [
+      {
+        email: mailOptions.to,
+        name: mailOptions.toName || mailOptions.to,
+      },
+    ];
+    
+    sendSmtpEmail.sender = {
+      email: mailOptions.from || process.env.EMAIL_FROM || 'noreply@example.com',
+      name: mailOptions.fromName || 'Eato Food Order',
+    };
+    
+    sendSmtpEmail.subject = mailOptions.subject;
+    sendSmtpEmail.htmlContent = mailOptions.html;
+    
+    // Add reply-to if provided
+    if (mailOptions.replyTo) {
+      sendSmtpEmail.replyTo = {
+        email: mailOptions.replyTo,
+      };
+    }
+
+    console.log('📧 Sending email via Brevo:', {
+      to: sendSmtpEmail.to[0].email,
+      from: sendSmtpEmail.sender.email,
+      subject: sendSmtpEmail.subject,
+    });
+
+    // Create timeout promise
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('Email send timeout')), timeout)
     );
 
+    // Send email with timeout protection
+    const emailPromise = apiInstance.sendTransacEmail(sendSmtpEmail);
     const result = await Promise.race([emailPromise, timeoutPromise]);
-    console.log('✓ Email sent successfully:', result.messageId);
-    return result;
+
+    console.log('✓ Email sent successfully:', result.body.messageId);
+    return { 
+      success: true, 
+      messageId: result.body.messageId,
+      data: result.body 
+    };
   } catch (err) {
     console.error('✗ Failed to send email:', err.message);
+    console.error('Error details:', err.response?.status, err.response?.body || err.toString());
     // Don't throw - let the application continue
-    return { error: err.message };
+    return { 
+      error: err.message,
+      status: err.response?.status,
+      details: err.response?.body || err.toString()
+    };
   }
 };
 
@@ -159,18 +99,17 @@ export const sendEmailWithTimeout = async (transporter, mailOptions, timeout = 8
  * @returns {Object} - Configuration status
  */
 export const verifyEmailConfig = () => {
-  const emailService = process.env.EMAIL_SERVICE || 'gmail';
-  const emailUser = process.env.EMAIL_USER;
-  const emailPassword = process.env.EMAIL_PASSWORD;
+  const apiKey = process.env.EMAIL_PASSWORD;
+  const emailFrom = process.env.EMAIL_FROM;
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
   return {
-    configured: !!(emailUser && emailPassword),
-    service: emailService,
-    user: emailUser ? `${emailUser.substring(0, 3)}***` : 'NOT SET',
-    password: emailPassword ? '***' : 'NOT SET',
+    configured: !!(apiKey && emailFrom),
+    service: 'brevo',
+    apiKey: apiKey ? `${apiKey.substring(0, 10)}***` : 'NOT SET',
+    emailFrom: emailFrom || 'NOT SET',
     frontendUrl: frontendUrl,
   };
 };
 
-export default createTransporter;
+export default sendEmailWithTimeout;

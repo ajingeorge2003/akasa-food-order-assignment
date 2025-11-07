@@ -4,16 +4,13 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import User from "../models/User.js";
-import createTransporter, { sendEmailWithTimeout, verifyEmailConfig } from "../utils/emailService.js";
+import { sendEmailWithTimeout, verifyEmailConfig } from "../utils/emailService.js";
 
 const router = express.Router();
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
-
-// Initialize nodemailer transporter
-const transporter = createTransporter();
 
 // POST /api/auth/register
 router.post(

@@ -3,15 +3,12 @@ import asyncHandler from "express-async-handler";
 import mongoose from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import { protect } from "../middleware/authMiddleware.js";
-import createTransporter, { sendEmailWithTimeout } from "../utils/emailService.js";
+import { sendEmailWithTimeout } from "../utils/emailService.js";
 import User from "../models/User.js";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
 
 const router = express.Router();
-
-// Initialize nodemailer transporter
-const transporter = createTransporter();
 
 // POST /api/orders/checkout
 router.post(
@@ -74,17 +71,15 @@ router.post(
       session.endSession();
 
       // Send invoice email (non-blocking)
-      if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+      if (process.env.EMAIL_PASSWORD && process.env.EMAIL_FROM) {
         try {
           const invoiceHtml = generateInvoiceHtml(order[0], user.email, orderItems);
-          const mailOptions = {
-            from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+          await sendEmailWithTimeout({
+            from: process.env.EMAIL_FROM,
             to: user.email,
             subject: `Order Confirmation - Invoice #${order[0].orderId.slice(-6).toUpperCase()}`,
             html: invoiceHtml
-          };
-          
-          await sendEmailWithTimeout(transporter, mailOptions);
+          });
         } catch (emailErr) {
           console.error("Failed to send invoice email:", emailErr.message);
           // Don't fail the order if email fails - log it and continue
