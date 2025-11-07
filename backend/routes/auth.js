@@ -101,7 +101,7 @@ router.post(
     };
 
     try {
-      await sendEmailWithTimeout(transporter, mailOptions);
+      await sendEmailWithTimeout(mailOptions);
       res.json({ message: "Password reset link sent to your email" });
     } catch (err) {
       console.error("Email sending failed:", err.message);
